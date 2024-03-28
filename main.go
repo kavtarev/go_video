@@ -9,6 +9,9 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"video/handlers"
+	"database/sql"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -16,16 +19,52 @@ func main() {
 }
 
 func runDefaultServer() {
+	db, err := sql.Open("postgres", "host=127.0.0.1 port=5433 user=postgres password=postgres dbname=backend_new sslmode=disable")
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+
+	rows, err := db.Query("select count(1) from tasks")
+
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	type count struct {
+		count int64
+	}
+	var cc int;
+	// c := count{}
+	for rows.Next() {
+		err := rows.Scan(&cc)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(cc)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		fmt.Println(666, err)
+	}
+
+
+	// fmt.Println(db)
+
 	server := http.NewServeMux()
 	
-	server.Handle("/", http.FileServer(http.Dir(".")))
+	// server.Handle("/", http.FileServer(http.Dir(".")))
 
-	server.HandleFunc("/video", handleVideo)
-	server.HandleFunc("/post", handlePost)
-	server.HandleFunc("/upload", handleUpload)
-	server.HandleFunc("/done", func (w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("done"))
-	})
+	// server.HandleFunc("/video", handleVideo)
+	// server.HandleFunc("/post", handlePost)
+	// server.HandleFunc("/upload", handleUpload)
+	server.HandleFunc("/create-user", handlers.CreateUser())
 
 	http.ListenAndServe(":3000", server)
 }
