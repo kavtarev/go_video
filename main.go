@@ -15,6 +15,10 @@ import (
 )
 
 func main() {
+	store := NewMockStorage{}
+	server := NewServerApi(&store, ":3000")
+	server.Run()
+	
 	runDefaultServer()
 }
 
@@ -29,7 +33,7 @@ func runDefaultServer() {
 		panic(err)
 	}
 
-	rows, err := db.Query("select count(1) from tasks")
+	rows, err := db.Query("select id, name from tasks")
 
 	if err != nil {
 		panic(err)
